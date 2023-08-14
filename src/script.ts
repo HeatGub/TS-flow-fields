@@ -6,11 +6,11 @@ canvas.addEventListener('click', () => {console.log('klik')})
 ctx.fillStyle = 'white'
 
 class Particle {
-    effect:any
+    effect:object
     x:number
     y:number
 
-    constructor(effect:any){
+    constructor(effect:object){
         this.effect = effect
         this.x = Math.random()*500
         this.y = Math.random()*500
@@ -24,15 +24,23 @@ class Particle {
 class Effect {
     width: number
     height: number
-    particles: any[] = []
+    //the type of particles is array of Particle objects
+    particles: Particle[]
+    numberOfParticles: number
+
     constructor(width: number, height: number){
         this.width = width
         this.height = height
         this.particles = []
+        this.numberOfParticles = 50
+        this.init()
     }
 
     init () {
-        this.particles.push(new Particle(this))
+        //create particles
+        for (let i=0; i< this.numberOfParticles; i++){
+            this.particles.push(new Particle(this))
+        }
     }
 
     render(context: CanvasRenderingContext2D) {
@@ -43,11 +51,12 @@ class Effect {
 }
 
 const effect = new Effect(canvas.width, canvas.height)
-effect.init()
+
 effect.render(ctx)
 console.log(effect.particles)
 
-// by default everything is PUBLIC
+
+// by default everything is PUBLIC it TS
 // private variable/method can only be used inside the class
 // readonly is good for constants inside classes
 // for inheritance: class X extends Y {}
