@@ -13,6 +13,8 @@ ctx.beginPath();
 ctx.moveTo(100, 200);
 ctx.lineTo(400, 500);
 ctx.stroke();
+// class Particle {
+// }
 class Effect {
     constructor(width, height) {
         this.width = width;
@@ -22,6 +24,10 @@ class Effect {
         return 'multiplied = ' + this.width * this.height;
     }
 }
-const object = new Effect(5, 10);
-console.log(object.someMethod());
+const objectInstance = new Effect(5, 10);
+console.log(objectInstance.someMethod());
+// by default everything is PUBLIC
+// private variable/method can only be used inside the class
+// readonly is good for constants inside classes
+// for inheritance: class X extends Y {}
 //# sourceMappingURL=script.js.map

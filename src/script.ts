@@ -18,10 +18,6 @@ ctx.stroke()
 // class Particle {
 // }
 
-type effectType = {
-    width:number
-}
-
 class Effect {
     width: number
     height: number
@@ -35,5 +31,10 @@ class Effect {
     }
 }
 
-const object = new Effect(5,10)
-console.log(object.someMethod())
+const objectInstance = new Effect(5,10)
+console.log(objectInstance.someMethod())
+
+// by default everything is PUBLIC
+// private variable/method can only be used inside the class
+// readonly is good for constants inside classes
+// for inheritance: class X extends Y {}
