@@ -2,37 +2,50 @@ const canvas = document.querySelector('#canvas1') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
-// canvas.addEventListener('click', () => {console.log('klik')})
+canvas.addEventListener('click', () => {console.log('klik')})
+ctx.fillStyle = 'white'
 
-ctx.fillStyle = 'blue'
-ctx.strokeStyle = 'white'
-ctx.lineWidth = 100
-ctx.lineCap = 'round'
-// ctx.arc(100, 100, 90, 0, Math.PI*2)
+class Particle {
+    effect:any
+    x:number
+    y:number
 
-ctx.beginPath();
-ctx.moveTo(100, 200)
-ctx.lineTo(400, 500)
-ctx.stroke()
+    constructor(effect:any){
+        this.effect = effect
+        this.x = Math.random()*500
+        this.y = Math.random()*500
+    }
 
-// class Particle {
-// }
+    draw(context:CanvasRenderingContext2D){
+        context.fillRect(this.x, this.y, 50, 50)
+    }
+}
 
 class Effect {
     width: number
     height: number
+    particles: any[] = []
     constructor(width: number, height: number){
         this.width = width
         this.height = height
+        this.particles = []
     }
 
-    someMethod ():string {
-        return 'multiplied = ' + this.width*this.height
+    init () {
+        this.particles.push(new Particle(this))
+    }
+
+    render(context: CanvasRenderingContext2D) {
+        this.particles.forEach(particle  => {
+            particle.draw(context)
+        })
     }
 }
 
-const objectInstance = new Effect(5,10)
-console.log(objectInstance.someMethod())
+const effect = new Effect(canvas.width, canvas.height)
+effect.init()
+effect.render(ctx)
+console.log(effect.particles)
 
 // by default everything is PUBLIC
 // private variable/method can only be used inside the class
