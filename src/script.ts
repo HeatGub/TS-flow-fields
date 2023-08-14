@@ -3,30 +3,47 @@ const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 canvas.addEventListener('click', () => {console.log('klik')})
-ctx.fillStyle = 'white'
+ctx.fillStyle = 'black'
+ctx.strokeStyle = 'white'
+
+type lastCoordinates = [{x:number, y:number}]
 
 class Particle {
-    effect:object
+    effect:Effect
     x:number
     y:number
     speedX:number
     speedY:number
-
-    constructor(effect:object){
+    history:lastCoordinates
+    maxLength:number
+    
+    constructor(effect:Effect){
         this.effect = effect
-        this.x = Math.random()*1000
-        this.y = Math.random()*1000
+        this.x = Math.random()*100
+        this.y = Math.random()*100
         this.speedX = Math.random()*10
-        this.speedY = Math.random()*100
+        this.speedY = Math.random()*10
+        this.history = [{x: this.x, y: this.y}]
+        this.maxLength = 15
     }
 
     draw(context:CanvasRenderingContext2D){
-        context.fillRect(this.x, this.y, 50, 50)
+        context.fillRect(this.x, this.y, 10, 10)
+        context.beginPath()
+        context.moveTo(this.history[0].x, this.history[0].y)
+        for (let i=0; i < this.history.length; i++){
+            context.lineTo(this.history[i].x, this.history[i].y)
+        }
+        context.stroke()
     }
 
     updateFrame(){
-        this.x = this.x + this.speedX
-        this.y = this.y + this.speedY
+        this.x = this.x + this.speedX + Math.random()*10 - 5
+        this.y = this.y + this.speedY + Math.random()*10 - 5
+        this.history.push({x: this.x, y: this.y})
+        if (this.history.length > this.maxLength){
+            this.history.shift()
+        }
     }
 }
 
@@ -41,7 +58,7 @@ class Effect {
         this.width = width
         this.height = height
         this.particles = []
-        this.numberOfParticles = 2000
+        this.numberOfParticles = 100
         this.init()
     }
 

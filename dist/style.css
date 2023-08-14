@@ -11,6 +11,6 @@
 }
 
 canvas {
-    background: black;
+    background: rgba(0, 0, 0, 0.64);
     position: absolute;
 }
