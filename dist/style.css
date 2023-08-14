@@ -1,0 +1,16 @@
+/* :root {
+    background: black;
+    color: white;
+} */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+}
+
+canvas {
+    background: black;
+    position: absolute;
+}
