@@ -9,15 +9,24 @@ class Particle {
     effect:object
     x:number
     y:number
+    speedX:number
+    speedY:number
 
     constructor(effect:object){
         this.effect = effect
-        this.x = Math.random()*500
-        this.y = Math.random()*500
+        this.x = Math.random()*1000
+        this.y = Math.random()*1000
+        this.speedX = Math.random()*10
+        this.speedY = Math.random()*100
     }
 
     draw(context:CanvasRenderingContext2D){
         context.fillRect(this.x, this.y, 50, 50)
+    }
+
+    updateFrame(){
+        this.x = this.x + this.speedX
+        this.y = this.y + this.speedY
     }
 }
 
@@ -32,7 +41,7 @@ class Effect {
         this.width = width
         this.height = height
         this.particles = []
-        this.numberOfParticles = 50
+        this.numberOfParticles = 2000
         this.init()
     }
 
@@ -46,14 +55,22 @@ class Effect {
     render(context: CanvasRenderingContext2D) {
         this.particles.forEach(particle  => {
             particle.draw(context)
+            particle.updateFrame()
         })
     }
 }
 
 const effect = new Effect(canvas.width, canvas.height)
 
-effect.render(ctx)
-console.log(effect.particles)
+function animate(){
+    ctx.clearRect(0,0,canvas.width, canvas.height)
+    effect.render(ctx)
+    requestAnimationFrame(animate)
+}
+
+animate()
+
+// console.log(effect.particles)
 
 
 // by default everything is PUBLIC it TS
