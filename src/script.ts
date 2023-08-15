@@ -5,6 +5,7 @@ canvas.height = window.innerHeight
 canvas.addEventListener('click', () => {console.log('klik')})
 ctx.fillStyle = 'black'
 ctx.strokeStyle = 'white'
+ctx.lineWidth = 2
 
 type lastCoordinates = [{x:number, y:number}]
 
@@ -19,6 +20,7 @@ class Particle {
     maxLength:number
     angle:number
     timer:number
+    color:string
     
     constructor(effect:Effect){
         this.effect = effect
@@ -26,20 +28,24 @@ class Particle {
         this.y = Math.floor(Math.random()*this.effect.height)
         this.speedX = 0 //but could be just initialized without value
         this.speedY = 0 //but could be just initialized without value
-        this.speedModifier = Math.floor(Math.random()*3 + 1)
+        // this.speedModifier = Math.floor(Math.random()*3 + 1)
+        this.speedModifier = 1
         this.history = [{x: this.x, y: this.y}]
-        this.maxLength = 10 + Math.random()* 15
+        this.maxLength = 10 + Math.random()* 50
         this.angle = 0
         this.timer = this.maxLength * 2
+        // this.color = 'green'
+        this.color = 'rgb('+Math.random()*50+','+Math.random()*150+','+100+Math.random()*150+')'
+
     }
 
     draw(context:CanvasRenderingContext2D){
-        context.fillRect(this.x, this.y, 4, 4)
         context.beginPath()
         context.moveTo(this.history[0].x, this.history[0].y)
         for (let i=0; i < this.history.length; i++){
             context.lineTo(this.history[i].x, this.history[i].y)
         }
+        context.strokeStyle = this.color
         context.stroke()
     }
 
@@ -51,8 +57,8 @@ class Particle {
                 let index =  y * this.effect.cols + x
                 this.angle = this.effect.flowField[index]
 
-                this.speedX = Math.cos(this.angle)*2
-                this.speedY = Math.sin(this.angle)*2
+                this.speedX = Math.cos(this.angle)*20
+                this.speedY = Math.sin(this.angle)*20
                 this.x += this.speedX * this.speedModifier
                 this.y += this.speedY * this.speedModifier
 
@@ -79,6 +85,7 @@ class Particle {
 }
 
 class Effect {
+    canvas: HTMLCanvasElement
     width: number
     height: number
     //the type of particles is array of Particle objects
@@ -90,25 +97,40 @@ class Effect {
     flowField: number[]
     curve: number
     zoom: number
+    debug: boolean
 
-    constructor(width: number, height: number){
-        this.width = width
-        this.height = height
+    constructor(canvas: HTMLCanvasElement){
+        this.canvas = canvas
+        this.width = this.canvas.width
+        this.height = this.canvas.height
         this.particles = []
-        this.numberOfParticles = 420
-        this.cellSize = 20
+        this.numberOfParticles = 100
         this.rows = 0 //any number, but this could be changed for 'let variable;'
         this.cols = 0
         this.flowField = []
-        this.curve = 0.5
-        this.zoom = 0.1
+
+        this.curve = 1000
+        this.cellSize = 20
+        this.zoom = 1/5000
+
+        this.debug = true
         this.init()
+
+        window.addEventListener('keydown', event => {
+            // console.log(event.key)
+            if (event.key === 'd') this.debug = !this.debug
+        })
+
+        window.addEventListener('resize', () => {
+            this.resize(window.innerWidth, window.innerHeight)
+        })
+
     }
 
     init () {
         //create flow field
-        this.rows = Math.floor(this.height / this.cellSize)
-        this.cols = Math.floor(this.width / this.cellSize)
+        this.rows = Math.ceil(this.height / this.cellSize)
+        this.cols = Math.ceil(this.width / this.cellSize)
         this.flowField = []
         // GRID - FLOW FIELD
         for (let y=0; y< this.rows; y++) {
@@ -125,7 +147,34 @@ class Effect {
         }
     }
 
+    drawGrid(context: CanvasRenderingContext2D){
+        context.save()
+        context.strokeStyle = 'gray'
+        context.lineWidth = 2
+        for(let c = 0; c< this.cols; c++){
+            context.beginPath()
+            context.moveTo(this.cellSize * c, 0)
+            context.lineTo(this.cellSize * c, this.height)
+            context.stroke()
+        }
+        for(let r = 0; r < this.rows; r++){
+            context.beginPath()
+            context.moveTo(0, this.cellSize * r)
+            context.lineTo(this.width, this.cellSize * r)
+            context.stroke()
+        }
+        context.restore()// to last save()
+    }
+
+    resize(width:number, height:number){
+        this.canvas.width = width
+        this.canvas.height = height
+        this.width = width
+        this.height = height
+    }
+
     render(context: CanvasRenderingContext2D) {
+        if (this.debug) {this.drawGrid(context)}
         this.particles.forEach(particle  => {
             particle.draw(context)
             particle.updateFrame()
@@ -133,7 +182,7 @@ class Effect {
     }
 }
 
-const effect = new Effect(canvas.width, canvas.height)
+const effect = new Effect(canvas)
 
 let frameCounter = 0
 function animate(){
@@ -144,12 +193,6 @@ function animate(){
 }
 
 animate()
-// console.log(effect.particles)
-
-
-
-
-
 
 
 //______________________________ FPS METER ______________________________
