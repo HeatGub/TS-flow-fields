@@ -14,3 +14,15 @@ canvas {
     background: rgba(0, 0, 0, 0.64);
     position: absolute;
 }
+
+#fpsValue{
+    position: absolute;
+    right: 0;
+    background-color: rgba(245, 245, 220, 0.537);
+    border-radius: 20%;
+    padding: 2px 5px;
+    font-size: 60px;
+    color:rgb(0, 149, 255);
+    font-family: monospace;
+    font-weight: 900;
+}

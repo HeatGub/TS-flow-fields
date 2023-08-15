@@ -9,12 +9,13 @@ ctx.strokeStyle = 'white';
 class Particle {
     constructor(effect) {
         this.effect = effect;
-        this.x = Math.random() * 100;
-        this.y = Math.random() * 100;
-        this.speedX = Math.random() * 10;
-        this.speedY = Math.random() * 10;
+        this.x = Math.random() * 1000;
+        this.y = Math.random() * 1000;
+        this.speedX = Math.random() * 10 - 5;
+        this.speedY = Math.random() * 10 - 5;
         this.history = [{ x: this.x, y: this.y }];
-        this.maxLength = 15;
+        this.maxLength = 10 + Math.random() * 200;
+        this.angle = 0;
     }
     draw(context) {
         context.fillRect(this.x, this.y, 10, 10);
@@ -26,10 +27,17 @@ class Particle {
         context.stroke();
     }
     updateFrame() {
-        this.x = this.x + this.speedX + Math.random() * 10 - 5;
-        this.y = this.y + this.speedY + Math.random() * 10 - 5;
+        let x = Math.floor(this.x / this.effect.cellSize);
+        let y = Math.floor(this.y / this.effect.cellSize);
+        let index = y * this.effect.cols + x;
+        this.angle = this.effect.flowField[index];
+        this.speedX = Math.cos(this.angle) * 2;
+        this.speedY = Math.sin(this.angle) * 2;
+        this.x += this.speedX;
+        this.y += this.speedY;
         this.history.push({ x: this.x, y: this.y });
         if (this.history.length > this.maxLength) {
+            //shift method removes first list's item
             this.history.shift();
         }
     }
@@ -39,10 +47,26 @@ class Effect {
         this.width = width;
         this.height = height;
         this.particles = [];
-        this.numberOfParticles = 100;
+        this.numberOfParticles = 1000;
+        this.cellSize = 20;
+        this.rows = 0; //any number, but this could be changed for 'let variable;'
+        this.cols = 0;
+        this.flowField = [];
         this.init();
     }
     init() {
+        //create flow field
+        this.rows = Math.floor(this.height / this.cellSize);
+        this.cols = Math.floor(this.width / this.cellSize);
+        this.flowField = [];
+        // GRID - FLOW FIELD
+        for (let y = 0; y < this.rows; y++) {
+            for (let x = 0; x < this.cols; x++) {
+                let angle = (Math.cos(x) + Math.sin(y)) * 0.5;
+                this.flowField.push(angle);
+            }
+        }
+        // console.log(this.flowField)
         //create particles
         for (let i = 0; i < this.numberOfParticles; i++) {
             this.particles.push(new Particle(this));
@@ -56,13 +80,28 @@ class Effect {
     }
 }
 const effect = new Effect(canvas.width, canvas.height);
+let frameCounter = 0;
 function animate() {
+    frameCounter += 1;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     effect.render(ctx);
     requestAnimationFrame(animate);
 }
 animate();
 // console.log(effect.particles)
+//______________________________ FPS METER ______________________________
+// CALL FUNCTION EVERY timeInterval  AND CALCULATE FramesPerSecond
+const fpsValue = document.getElementById('fpsValue');
+let lastframeCounter = frameCounter;
+const timeInterval = 250;
+const calculateCurrentFps = () => {
+    const framesDifference = frameCounter - lastframeCounter;
+    lastframeCounter = frameCounter;
+    const fps = framesDifference * (1000 / timeInterval);
+    fpsValue.textContent = String(fps);
+};
+const runFpsChecks = setInterval(calculateCurrentFps, timeInterval);
+//______________________________ FPS METER ______________________________
 // by default everything is PUBLIC it TS
 // private variable/method can only be used inside the class
 // readonly is good for constants inside classes
