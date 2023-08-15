@@ -9,16 +9,18 @@ ctx.strokeStyle = 'white';
 class Particle {
     constructor(effect) {
         this.effect = effect;
-        this.x = Math.random() * 1000;
-        this.y = Math.random() * 1000;
-        this.speedX = Math.random() * 10 - 5;
-        this.speedY = Math.random() * 10 - 5;
+        this.x = Math.floor(Math.random() * this.effect.width);
+        this.y = Math.floor(Math.random() * this.effect.height);
+        this.speedX = 0; //but could be just initialized without value
+        this.speedY = 0; //but could be just initialized without value
+        this.speedModifier = Math.floor(Math.random() * 3 + 1);
         this.history = [{ x: this.x, y: this.y }];
-        this.maxLength = 10 + Math.random() * 200;
+        this.maxLength = 10 + Math.random() * 15;
         this.angle = 0;
+        this.timer = this.maxLength * 2;
     }
     draw(context) {
-        context.fillRect(this.x, this.y, 10, 10);
+        context.fillRect(this.x, this.y, 4, 4);
         context.beginPath();
         context.moveTo(this.history[0].x, this.history[0].y);
         for (let i = 0; i < this.history.length; i++) {
@@ -27,19 +29,34 @@ class Particle {
         context.stroke();
     }
     updateFrame() {
-        let x = Math.floor(this.x / this.effect.cellSize);
-        let y = Math.floor(this.y / this.effect.cellSize);
-        let index = y * this.effect.cols + x;
-        this.angle = this.effect.flowField[index];
-        this.speedX = Math.cos(this.angle) * 2;
-        this.speedY = Math.sin(this.angle) * 2;
-        this.x += this.speedX;
-        this.y += this.speedY;
-        this.history.push({ x: this.x, y: this.y });
-        if (this.history.length > this.maxLength) {
-            //shift method removes first list's item
+        this.timer--;
+        if (this.timer >= 1) {
+            let x = Math.floor(this.x / this.effect.cellSize);
+            let y = Math.floor(this.y / this.effect.cellSize);
+            let index = y * this.effect.cols + x;
+            this.angle = this.effect.flowField[index];
+            this.speedX = Math.cos(this.angle) * 2;
+            this.speedY = Math.sin(this.angle) * 2;
+            this.x += this.speedX * this.speedModifier;
+            this.y += this.speedY * this.speedModifier;
+            this.history.push({ x: this.x, y: this.y });
+            if (this.history.length > this.maxLength) {
+                //shift method removes first list's item
+                this.history.shift();
+            }
+        }
+        else if (this.history.length > 1) {
             this.history.shift();
         }
+        else {
+            this.reset();
+        }
+    }
+    reset() {
+        this.x = Math.floor(Math.random() * this.effect.width);
+        this.y = Math.floor(Math.random() * this.effect.height);
+        this.history = [{ x: this.x, y: this.y }];
+        this.timer = this.maxLength * 2;
     }
 }
 class Effect {
@@ -47,11 +64,13 @@ class Effect {
         this.width = width;
         this.height = height;
         this.particles = [];
-        this.numberOfParticles = 1000;
+        this.numberOfParticles = 420;
         this.cellSize = 20;
         this.rows = 0; //any number, but this could be changed for 'let variable;'
         this.cols = 0;
         this.flowField = [];
+        this.curve = 0.5;
+        this.zoom = 0.1;
         this.init();
     }
     init() {
@@ -62,7 +81,7 @@ class Effect {
         // GRID - FLOW FIELD
         for (let y = 0; y < this.rows; y++) {
             for (let x = 0; x < this.cols; x++) {
-                let angle = (Math.cos(x) + Math.sin(y)) * 0.5;
+                let angle = (Math.cos(x * this.zoom) + Math.sin(y * this.zoom)) * this.curve;
                 this.flowField.push(angle);
             }
         }
