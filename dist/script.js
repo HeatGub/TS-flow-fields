@@ -40,6 +40,7 @@ class Particle {
             let y = Math.floor(this.y / this.effect.cellSize);
             let index = y * this.effect.cols + x;
             if (this.effect.flowField[index]) {
+                // this.angle += this.effect.flowField[index].colorAngle
                 this.angle = this.effect.flowField[index].colorAngle;
             }
             this.speedX = Math.cos(this.angle) * 10;
@@ -78,7 +79,7 @@ class Effect {
         this.cols = 0;
         this.flowField = [];
         // this.flowField = singleFieldCell
-        this.cellSize = 1;
+        this.cellSize = 9;
         this.curve = 100;
         this.zoom = 100000;
         this.debug = false;
@@ -96,8 +97,12 @@ class Effect {
         this.context.font = '600px Impact';
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
-        this.context.fillStyle = "green";
-        this.context.fillText('JS', this.width * 0.5, this.height * 0.5);
+        const gradient1 = this.context.createLinearGradient(0, 0, this.width, this.height);
+        gradient1.addColorStop(0.2, 'yellow');
+        gradient1.addColorStop(0.5, 'green');
+        gradient1.addColorStop(0.8, 'blue');
+        this.context.fillStyle = gradient1;
+        this.context.fillText('Flow', this.width * 0.5, this.height * 0.5, this.width); //last arg = max width
     }
     init() {
         //create flow field
