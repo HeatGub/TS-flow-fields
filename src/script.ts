@@ -21,6 +21,8 @@ class Particle {
     history:lastCoordinates
     maxLength:number
     angle:number
+    newAngle:number
+    angleCorrector:number
     timer:number
     color:string
     
@@ -33,8 +35,10 @@ class Particle {
         // this.speedModifier = Math.floor(Math.random()*3 + 1)
         this.speedModifier = 1
         this.history = [{x: this.x, y: this.y}]
-        this.maxLength = 10 + Math.random()* 50
+        this.maxLength = 10 + Math.random()* 10
         this.angle = 0
+        this.newAngle = 0
+        this.angleCorrector = 0.5
         this.timer = this.maxLength * 5
         // this.color = 'green'
         this.color = 'rgb('+Math.random()*50+','+Math.random()*150+','+100+Math.random()*150+')'
@@ -60,7 +64,17 @@ class Particle {
 
                 if (this.effect.flowField[index]){
                     // this.angle += this.effect.flowField[index].colorAngle
-                    this.angle = this.effect.flowField[index].colorAngle
+                    // this.angle = this.effect.flowField[index].colorAngle
+                    this.newAngle = this.effect.flowField[index].colorAngle
+                    if (this.angle > this.newAngle){
+                        this.angle -= this.angleCorrector
+                    }
+                    else if (this.angle > this.newAngle) {
+                        this.angle += this.angleCorrector
+                    }
+                    else {
+                        this.angle = this.newAngle
+                    }
                 }
 
                 this.speedX = Math.cos(this.angle)*10
@@ -84,14 +98,34 @@ class Particle {
     }
 
     reset(){
-        this.x = Math.floor(Math.random()*this.effect.width)
-        this.y = Math.floor(Math.random()*this.effect.height)
-        this.history = [{x: this.x, y: this.y}]
-        this.timer = this.maxLength * 2
+        let attempts = 0
+        let resetSuccess = false
+        let testIndex = 0
+        //attempt 50 times to spawn inside letters
+        while (attempts <50 && !resetSuccess){
+            attempts++
+            testIndex = Math.floor(Math.floor(Math.random()*this.effect.flowField.length))
+
+            //spawn particles from the letters
+            if (this.effect.flowField[testIndex].alpha > 0) {
+                this.x = this.effect.flowField[testIndex].x
+                this.y = this.effect.flowField[testIndex].y
+                this.history = [{x: this.x, y: this.y}]
+                this.timer = this.maxLength * 2
+                resetSuccess = true
+            }
+        }
+
+        if (!resetSuccess){
+            this.x = Math.floor(Math.random()*this.effect.width)
+            this.y = Math.floor(Math.random()*this.effect.height)
+            this.history = [{x: this.x, y: this.y}]
+            this.timer = this.maxLength * 2
+        }
     }
 }
 
-type singleFieldCell = {x:number, y:number, colorAngle:number}
+type singleFieldCell = {x:number, y:number, alpha:number, colorAngle:number}
 
 class Effect {
     canvas: HTMLCanvasElement
@@ -115,13 +149,13 @@ class Effect {
         this.width = this.canvas.width
         this.height = this.canvas.height
         this.particles = []
-        this.numberOfParticles = 300
+        this.numberOfParticles = 600
         this.rows = 0 //any number, but this could be changed for 'let variable;'
         this.cols = 0
         this.flowField = []
         // this.flowField = singleFieldCell
 
-        this.cellSize = 9
+        this.cellSize = 20
         this.curve = 100
         this.zoom = 100000
 
@@ -140,7 +174,7 @@ class Effect {
     }
 
     drawText(){
-        this.context.font = '600px Impact'
+        this.context.font = '600px Bold'
         this.context.textAlign = 'center'
         this.context.textBaseline = 'middle'
 
@@ -150,7 +184,7 @@ class Effect {
         gradient1.addColorStop(0.8, 'blue')
 
         this.context.fillStyle = gradient1
-        this.context.fillText('Flow', this.width *0.5, this.height * 0.5, this.width) //last arg = max width
+        this.context.fillText('JS', this.width *0.5, this.height * 0.5, this.width) //last arg = max width
     }
 
     init () {
@@ -171,12 +205,13 @@ class Effect {
                 const red = pixels[index]
                 const green = pixels[index + 1]
                 const blue = pixels[index + 2]
-                // const alpha = pixels[index + 3]
+                const alpha = pixels[index + 3]
                 const grayscale = (red + green + blue) / 3
                 const colorAngle = Number(((grayscale/255) * 6.28).toFixed(2))
                 this.flowField.push({
                     x: x,
                     y: y,
+                    alpha: alpha,
                     colorAngle: colorAngle
                 })
             }
@@ -195,6 +230,8 @@ class Effect {
         for (let i=0; i< this.numberOfParticles; i++){
             this.particles.push(new Particle(this))
         }
+        //forse spawning from the letters in init
+        this.particles.forEach(particle => particle.reset())
     }
 
     drawGrid(){
