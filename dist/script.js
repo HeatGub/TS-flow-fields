@@ -3,7 +3,7 @@
 const canvas = document.querySelector('#canvas1');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.height = window.innerHeight; //height and width have to be divisible by cellSize without any rest (x%cellSize=0)
 canvas.addEventListener('click', () => { console.log('klik'); });
 ctx.fillStyle = 'black';
 ctx.strokeStyle = 'white';
@@ -39,7 +39,9 @@ class Particle {
             let x = Math.floor(this.x / this.effect.cellSize);
             let y = Math.floor(this.y / this.effect.cellSize);
             let index = y * this.effect.cols + x;
-            this.angle = this.effect.flowField[index];
+            if (this.effect.flowField[index]) {
+                this.angle = this.effect.flowField[index].colorAngle;
+            }
             this.speedX = Math.cos(this.angle) * 10;
             this.speedY = Math.sin(this.angle) * 10;
             this.x += this.speedX * this.speedModifier;
@@ -71,12 +73,13 @@ class Effect {
         this.width = this.canvas.width;
         this.height = this.canvas.height;
         this.particles = [];
-        this.numberOfParticles = 200;
+        this.numberOfParticles = 300;
         this.rows = 0; //any number, but this could be changed for 'let variable;'
         this.cols = 0;
         this.flowField = [];
-        this.cellSize = 10;
-        this.curve = 1000;
+        // this.flowField = singleFieldCell
+        this.cellSize = 1;
+        this.curve = 100;
         this.zoom = 100000;
         this.debug = false;
         this.init();
@@ -90,7 +93,7 @@ class Effect {
         });
     }
     drawText() {
-        this.context.font = '500px Impact';
+        this.context.font = '600px Impact';
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
         this.context.fillStyle = "green";
@@ -102,18 +105,33 @@ class Effect {
         this.cols = Math.ceil(this.width / this.cellSize);
         this.flowField = [];
         //draw text (just once)
-        // this.drawText()
+        this.drawText();
         //scan pixel data
-        const pixels = this.context.getImageData(0, 0, this.width, this.height);
+        const pixels = this.context.getImageData(0, 0, this.width, this.height).data;
         console.log(pixels);
-        // GRID - FLOW FIELD
-        for (let y = 0; y < this.rows; y++) {
-            for (let x = 0; x < this.cols; x++) {
-                let angle = (Math.cos(x / this.zoom) + Math.sin(y / this.zoom)) * this.curve;
-                this.flowField.push(angle);
+        for (let y = 0; y < this.height; y += this.cellSize) {
+            for (let x = 0; x < this.width; x += this.cellSize) {
+                const index = (y * this.width + x) * 4; //because 4 vals represent one pixel
+                const red = pixels[index];
+                const green = pixels[index + 1];
+                const blue = pixels[index + 2];
+                // const alpha = pixels[index + 3]
+                const grayscale = (red + green + blue) / 3;
+                const colorAngle = Number(((grayscale / 255) * 6.28).toFixed(2));
+                this.flowField.push({
+                    x: x,
+                    y: y,
+                    colorAngle: colorAngle
+                });
             }
         }
-        // console.log(this.flowField)
+        // // GRID - FLOW FIELD
+        // for (let y=0; y< this.rows; y++) {
+        //     for (let x=0; x< this.cols; x++){
+        //         let angle = (Math.cos(x / this.zoom) + Math.sin(y / this.zoom)) * this.curve
+        //         this.flowField.push(angle)
+        //     }
+        // }
         //create particles
         this.particles = [];
         for (let i = 0; i < this.numberOfParticles; i++) {
