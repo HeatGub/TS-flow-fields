@@ -1,3 +1,5 @@
+// https://www.youtube.com/watch?v=MJNy2mdCt20&ab_channel=Frankslaboratory
+
 const canvas = document.querySelector('#canvas1') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 canvas.width = window.innerWidth
@@ -33,7 +35,7 @@ class Particle {
         this.history = [{x: this.x, y: this.y}]
         this.maxLength = 10 + Math.random()* 50
         this.angle = 0
-        this.timer = this.maxLength * 2
+        this.timer = this.maxLength * 5
         // this.color = 'green'
         this.color = 'rgb('+Math.random()*50+','+Math.random()*150+','+100+Math.random()*150+')'
 
@@ -57,8 +59,8 @@ class Particle {
                 let index =  y * this.effect.cols + x
                 this.angle = this.effect.flowField[index]
 
-                this.speedX = Math.cos(this.angle)*20
-                this.speedY = Math.sin(this.angle)*20
+                this.speedX = Math.cos(this.angle)*10
+                this.speedY = Math.sin(this.angle)*10
                 this.x += this.speedX * this.speedModifier
                 this.y += this.speedY * this.speedModifier
 
@@ -86,6 +88,7 @@ class Particle {
 
 class Effect {
     canvas: HTMLCanvasElement
+    context: CanvasRenderingContext2D
     width: number
     height: number
     //the type of particles is array of Particle objects
@@ -99,21 +102,22 @@ class Effect {
     zoom: number
     debug: boolean
 
-    constructor(canvas: HTMLCanvasElement){
+    constructor(canvas: HTMLCanvasElement, ctx:CanvasRenderingContext2D){
         this.canvas = canvas
+        this.context = ctx
         this.width = this.canvas.width
         this.height = this.canvas.height
         this.particles = []
-        this.numberOfParticles = 100
+        this.numberOfParticles = 200
         this.rows = 0 //any number, but this could be changed for 'let variable;'
         this.cols = 0
         this.flowField = []
 
+        this.cellSize = 10
         this.curve = 1000
-        this.cellSize = 20
-        this.zoom = 1/5000
+        this.zoom = 100000
 
-        this.debug = true
+        this.debug = false
         this.init()
 
         window.addEventListener('keydown', event => {
@@ -127,68 +131,89 @@ class Effect {
 
     }
 
+    drawText(){
+        this.context.font = '500px Impact'
+        this.context.textAlign = 'center'
+        this.context.textBaseline = 'middle'
+        this.context.fillStyle = "green";
+        this.context.fillText('JS', this.width *0.5, this.height * 0.5);
+    }
+
     init () {
         //create flow field
         this.rows = Math.ceil(this.height / this.cellSize)
         this.cols = Math.ceil(this.width / this.cellSize)
         this.flowField = []
+
+        //draw text (just once)
+        // this.drawText()
+
+        //scan pixel data
+        const pixels = this.context.getImageData(0, 0, this.width, this.height)
+        console.log(pixels)
+
         // GRID - FLOW FIELD
         for (let y=0; y< this.rows; y++) {
             for (let x=0; x< this.cols; x++){
-                let angle = (Math.cos(x * this.zoom) + Math.sin(y * this.zoom)) * this.curve
+                let angle = (Math.cos(x / this.zoom) + Math.sin(y / this.zoom)) * this.curve
                 this.flowField.push(angle)
             }
         }
         // console.log(this.flowField)
         
         //create particles
+        this.particles = []
         for (let i=0; i< this.numberOfParticles; i++){
             this.particles.push(new Particle(this))
         }
     }
 
-    drawGrid(context: CanvasRenderingContext2D){
-        context.save()
-        context.strokeStyle = 'gray'
-        context.lineWidth = 2
+    drawGrid(){
+        this.context.save()
+        this.context.strokeStyle = 'gray'
+        this.context.lineWidth = 2
         for(let c = 0; c< this.cols; c++){
-            context.beginPath()
-            context.moveTo(this.cellSize * c, 0)
-            context.lineTo(this.cellSize * c, this.height)
-            context.stroke()
+            this.context.beginPath()
+            this.context.moveTo(this.cellSize * c, 0)
+            this.context.lineTo(this.cellSize * c, this.height)
+            this.context.stroke()
         }
         for(let r = 0; r < this.rows; r++){
-            context.beginPath()
-            context.moveTo(0, this.cellSize * r)
-            context.lineTo(this.width, this.cellSize * r)
-            context.stroke()
+            this.context.beginPath()
+            this.context.moveTo(0, this.cellSize * r)
+            this.context.lineTo(this.width, this.cellSize * r)
+            this.context.stroke()
         }
-        context.restore()// to last save()
+        this.context.restore()// to last save()
     }
 
     resize(width:number, height:number){
-        this.canvas.width = width
-        this.canvas.height = height
         this.width = width
         this.height = height
+        this.canvas.width = width
+        this.canvas.height = height
+        this.init()
     }
 
-    render(context: CanvasRenderingContext2D) {
-        if (this.debug) {this.drawGrid(context)}
+    render() {
+        if (this.debug) {
+            this.drawGrid()
+            this.drawText()
+        }
         this.particles.forEach(particle  => {
-            particle.draw(context)
+            particle.draw(this.context)
             particle.updateFrame()
         })
     }
 }
 
-const effect = new Effect(canvas)
+const effect = new Effect(canvas, ctx)
 
 let frameCounter = 0
 function animate(){
     frameCounter += 1
     ctx.clearRect(0,0,canvas.width, canvas.height)
-    effect.render(ctx)
+    effect.render()
     requestAnimationFrame(animate)
 }
 
