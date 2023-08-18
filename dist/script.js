@@ -8,6 +8,7 @@ canvas.addEventListener('click', () => { console.log('klik'); });
 ctx.fillStyle = 'black';
 ctx.strokeStyle = 'white';
 ctx.lineWidth = 2;
+ctx.lineCap = 'round';
 class Particle {
     constructor(effect) {
         this.effect = effect;
@@ -18,13 +19,17 @@ class Particle {
         // this.speedModifier = Math.floor(Math.random()*3 + 1)
         this.speedModifier = 1;
         this.history = [{ x: this.x, y: this.y }];
-        this.maxLength = 10 + Math.random() * 10;
+        // this.maxLength = 2 + Math.random() * 7
+        this.maxLength = 2;
         this.angle = 0;
         this.newAngle = 0;
-        this.angleCorrector = 0.5;
-        this.timer = this.maxLength * 5;
+        // TWEAK THAT PARAMETER
+        this.angleCorrector = 0.01;
+        this.timer = 0;
+        // COLOR OF THE PARTICLES
         // this.color = 'green'
-        this.color = 'rgb(' + Math.random() * 50 + ',' + Math.random() * 150 + ',' + 100 + Math.random() * 150 + ')';
+        // this.color = 'rgb('+Math.random()*150+','+Math.random()*150+','+100+Math.random()*150+')'
+        this.color = 'rgb(' + 10 + Math.random() * 10 + ',' + Math.random() * 170 + ',' + 100 + Math.random() * 150 + ')';
     }
     draw(context) {
         context.beginPath();
@@ -55,8 +60,8 @@ class Particle {
                     this.angle = this.newAngle;
                 }
             }
-            this.speedX = Math.cos(this.angle) * 10;
-            this.speedY = Math.sin(this.angle) * 10;
+            this.speedX = Math.cos(this.angle);
+            this.speedY = Math.sin(this.angle);
             this.x += this.speedX * this.speedModifier;
             this.y += this.speedY * this.speedModifier;
             this.history.push({ x: this.x, y: this.y });
@@ -76,24 +81,31 @@ class Particle {
         let attempts = 0;
         let resetSuccess = false;
         let testIndex = 0;
-        //attempt 50 times to spawn inside letters
-        while (attempts < 50 && !resetSuccess) {
+        //attempts to spawn inside letters
+        while (attempts < 20 && !resetSuccess) {
             attempts++;
             testIndex = Math.floor(Math.floor(Math.random() * this.effect.flowField.length));
-            //spawn particles from the letters
+            // FROM INSIDE OF THE LETTERS - spawn particles from the letters
             if (this.effect.flowField[testIndex].alpha > 0) {
                 this.x = this.effect.flowField[testIndex].x;
                 this.y = this.effect.flowField[testIndex].y;
                 this.history = [{ x: this.x, y: this.y }];
-                this.timer = this.maxLength * 2;
+                this.maxLength = 5 + Math.random() * 15;
+                //lifetime of a particle spawned inside the text
+                this.timer = this.maxLength + Math.ceil(Math.random() * 5);
                 resetSuccess = true;
             }
         }
+        // FROM OUTSIDE OF THE LETTERS - spawned beyond the text
         if (!resetSuccess) {
             this.x = Math.floor(Math.random() * this.effect.width);
             this.y = Math.floor(Math.random() * this.effect.height);
             this.history = [{ x: this.x, y: this.y }];
-            this.timer = this.maxLength * 2;
+            //lifetime of a particle spawned beyond the text
+            this.maxLength = 2 + Math.ceil(Math.random() * 3);
+            this.timer = this.maxLength;
+            // BACKGROUND COLOR
+            // this.color = 'rgb(' + Math.random()*40 +','+ Math.random()*40 +','+ Math.random()*40+')'
         }
     }
 }
@@ -104,14 +116,13 @@ class Effect {
         this.width = this.canvas.width;
         this.height = this.canvas.height;
         this.particles = [];
-        this.numberOfParticles = 600;
+        this.numberOfParticles = 420;
         this.rows = 0; //any number, but this could be changed for 'let variable;'
         this.cols = 0;
         this.flowField = [];
-        // this.flowField = singleFieldCell
-        this.cellSize = 20;
-        this.curve = 100;
-        this.zoom = 100000;
+        this.cellSize = 10;
+        this.curve = 0.01;
+        this.zoom = 10000;
         this.debug = false;
         this.init();
         window.addEventListener('keydown', event => {
@@ -124,15 +135,15 @@ class Effect {
         });
     }
     drawText() {
-        this.context.font = '600px Bold';
+        this.context.font = '600px Brush Script MT';
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
         const gradient1 = this.context.createLinearGradient(0, 0, this.width, this.height);
-        gradient1.addColorStop(0.2, 'yellow');
-        gradient1.addColorStop(0.5, 'green');
-        gradient1.addColorStop(0.8, 'blue');
+        gradient1.addColorStop(0.3, 'yellow');
+        // gradient1.addColorStop(0.5, 'green')
+        // gradient1.addColorStop(0.99, 'blue')
         this.context.fillStyle = gradient1;
-        this.context.fillText('JS', this.width * 0.5, this.height * 0.5, this.width); //last arg = max width
+        this.context.fillText('TEXT', this.width * 0.5, this.height * 0.5, this.width); //last arg = max width
     }
     init() {
         //create flow field
@@ -161,6 +172,7 @@ class Effect {
                 });
             }
         }
+        // THE OLD WAY
         // // GRID - FLOW FIELD
         // for (let y=0; y< this.rows; y++) {
         //     for (let x=0; x< this.cols; x++){
@@ -234,8 +246,4 @@ const calculateCurrentFps = () => {
 };
 const runFpsChecks = setInterval(calculateCurrentFps, timeInterval);
 //______________________________ FPS METER ______________________________
-// by default everything is PUBLIC it TS
-// private variable/method can only be used inside the class
-// readonly is good for constants inside classes
-// for inheritance: class X extends Y {}
 //# sourceMappingURL=script.js.map
